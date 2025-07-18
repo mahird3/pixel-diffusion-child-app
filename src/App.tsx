@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Upload, Sparkles, Baby, Heart, Camera, Wand2, Share2, Copy, Facebook, Twitter, MessageCircle, Link } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
@@ -11,16 +11,64 @@ interface GeneratedResult {
 }
 
 function App() {
-  const [fatherImg, setFatherImg] = useState<File | null>(null);
-  const [motherImg, setMotherImg] = useState<File | null>(null);
-  const [fatherPreview, setFatherPreview] = useState<string | null>(null);
-  const [motherPreview, setMotherPreview] = useState<string | null>(null);
-  const [gender, setGender] = useState<'boy' | 'girl'>('boy');
-  const [resultImg, setResultImg] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState<number>(0);
-  const [shareUrl, setShareUrl] = useState<string | null>(null);
-  const [showShareModal, setShowShareModal] = useState(false);
+  // 1) Files themselves can't live in localStorage,
+  //    so we keep the File objects here but don't persist them:
+  const [fatherImg, setFatherImg]     = useState<File | null>(null);
+  const [motherImg, setMotherImg]     = useState<File | null>(null);
+
+  // 2) Persistable values—use a lazy initializer to read from localStorage:
+  const [fatherPreview, setFatherPreview] = useState<string | null>(
+    () => localStorage.getItem('childiff_fatherPreview')
+  );
+  const [motherPreview, setMotherPreview] = useState<string | null>(
+    () => localStorage.getItem('childiff_motherPreview')
+  );
+  const [gender, setGender] = useState<'boy' | 'girl'>(
+    () => (localStorage.getItem('childiff_gender') as 'boy'|'girl') || 'boy'
+  );
+  const [resultImg, setResultImg] = useState<string | null>(
+    () => localStorage.getItem('childiff_lastOutput')
+  );
+  const [currentStep, setCurrentStep] = useState<number>(
+    () => Number(localStorage.getItem('childiff_step')) || 0
+  );
+  const [shareUrl, setShareUrl] = useState<string | null>(
+    () => localStorage.getItem('childiff_shareUrl')
+  );
+  const [showShareModal, setShowShareModal] = useState<boolean>(
+    () => localStorage.getItem('childiff_showShareModal') === 'true'
+  );
+  const [loading, setLoading] = useState<boolean>(false);
+
+  // 3) Whenever any of those values change, write them back to localStorage:
+  useEffect(() => {
+    localStorage.setItem('childiff_fatherPreview', fatherPreview || '');
+  }, [fatherPreview]);
+
+  useEffect(() => {
+    localStorage.setItem('childiff_motherPreview', motherPreview || '');
+  }, [motherPreview]);
+
+  useEffect(() => {
+    localStorage.setItem('childiff_gender', gender);
+  }, [gender]);
+
+  useEffect(() => {
+    localStorage.setItem('childiff_lastOutput', resultImg || '');
+  }, [resultImg]);
+
+  useEffect(() => {
+    localStorage.setItem('childiff_step', String(currentStep));
+  }, [currentStep]);
+
+  useEffect(() => {
+    if (shareUrl) localStorage.setItem('childiff_shareUrl', shareUrl);
+  }, [shareUrl]);
+
+  useEffect(() => {
+    localStorage.setItem('childiff_showShareModal', String(showShareModal));
+  }, [showShareModal]);
+
 
   const handleFileUpload = (file: File, type: 'father' | 'mother') => {
     const reader = new FileReader();
@@ -29,9 +77,11 @@ function App() {
       if (type === 'father') {
         setFatherImg(file);
         setFatherPreview(preview);
+        localStorage.setItem('childiff_fatherPreview', preview);
       } else {
         setMotherImg(file);
         setMotherPreview(preview);
+        localStorage.setItem('childiff_motherPreview', preview);
       }
     };
     reader.readAsDataURL(file);
@@ -46,6 +96,7 @@ function App() {
     setResultImg(null);
     setLoading(true);
     setCurrentStep(1);
+    localStorage.setItem('childiff_step', '1');
 
     const formData = new FormData();
     formData.append("father_image", fatherImg);
@@ -66,6 +117,7 @@ function App() {
 
       // Step 2: Enhance with CodeFormer
       setCurrentStep(2);
+      localStorage.setItem('childiff_step', '2');
       const codeRes = await fetch(`${API_BASE}/api/codeformer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -78,6 +130,7 @@ function App() {
 
       // Step 3: Final styling with FLUX
       setCurrentStep(3);
+      localStorage.setItem('childiff_step', '3');
       const fluxRes = await fetch(`${API_BASE}/api/flux`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -89,11 +142,14 @@ function App() {
       if (!fluxOutput) throw new Error("Failed at stage 3");
 
       setResultImg(fluxOutput);
+      localStorage.setItem('childiff_lastOutput', fluxOutput);
       setCurrentStep(0);
+      localStorage.setItem('childiff_step', '0');
       
       // Generate a shareable URL (in a real app, you'd save this to a database)
       const shareableUrl = `${window.location.origin}/shared/${Date.now()}`;
       setShareUrl(shareableUrl);
+      localStorage.setItem('childiff_shareUrl', shareableUrl);
     } catch (err) {
       console.error("Generation error:", err);
       alert("Something went wrong during generation. Please try again.");
@@ -399,13 +455,25 @@ function App() {
                 </button>
                 <button
                   onClick={() => {
+                    // 1) Clear React state
                     setResultImg(null);
                     setFatherImg(null);
                     setMotherImg(null);
                     setFatherPreview(null);
                     setMotherPreview(null);
+                    setGender('boy');
+                    setCurrentStep(0);
                     setShareUrl(null);
                     setShowShareModal(false);
+
+                    // 2) Remove all persistence keys from localStorage
+                    localStorage.removeItem('childiff_lastOutput');
+                    localStorage.removeItem('childiff_fatherPreview');
+                    localStorage.removeItem('childiff_motherPreview');
+                    localStorage.removeItem('childiff_gender');
+                    localStorage.removeItem('childiff_step');
+                    localStorage.removeItem('childiff_shareUrl');
+                    localStorage.removeItem('childiff_showShareModal');
                   }}
                   className="px-6 py-3 bg-gray-500 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                 >
