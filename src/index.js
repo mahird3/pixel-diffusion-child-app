@@ -168,7 +168,7 @@ app.post("/api/flux", async (req, res) => {
         version: "black-forest-labs/flux-kontext-pro", // Full version ID for FLUX Kontext Pro
         input: {
           input_image: image_url,
-          prompt: "Generate a child version of this face with big eyes, soft round cheeks, and a warm smile. Make it look like an adorable, lovable cartoon or emoji-style child—glossy, cute, and visually appealing. Ignore age in the original image and always produce a young child look (around 8 years old).",
+          prompt: "Generate a child version of this face with big eyes, soft round cheeks, and a warm smile. Make it look like an adorable, lovable child, cute, and visually appealing. Ignore age in the original image and always produce a young child look (around 8 years old). Make the face look hyper-realistic and very cute.",
           aspect_ratio: "1:1",
           output_format: "png",
           safety_tolerance: 2,
