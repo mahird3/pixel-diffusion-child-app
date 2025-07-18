@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Upload, Sparkles, Baby, Heart, Camera, Wand2, Share2, Copy, Facebook, Twitter, MessageCircle, Link } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
+
 interface GeneratedResult {
   imageUrl: string;
   timestamp: number;
@@ -51,7 +54,7 @@ function App() {
     try {
       // Step 1: Generate initial child face
       setCurrentStep(1);
-      const rawRes = await fetch("http://localhost:5000/api/child", {
+      const rawRes = await fetch(`${API_BASE}/api/child`, {
         method: "POST",
         body: formData,
       });
@@ -62,7 +65,7 @@ function App() {
 
       // Step 2: Enhance with CodeFormer
       setCurrentStep(2);
-      const codeRes = await fetch("http://localhost:5000/api/codeformer", {
+      const codeRes = await fetch(`${API_BASE}/api/codeformer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image_url: rawOutput }),
@@ -74,7 +77,7 @@ function App() {
 
       // Step 3: Final styling with FLUX
       setCurrentStep(3);
-      const fluxRes = await fetch("http://localhost:5000/api/flux", {
+      const fluxRes = await fetch(`${API_BASE}/api/flux`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image_url: codeOutput }),
