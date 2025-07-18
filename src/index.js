@@ -6,6 +6,13 @@ import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 import dotenv from "dotenv";
 
+import path             from "path";
+import { fileURLToPath } from "url";
+
+// ESM __dirname hack:
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = path.dirname(__filename);
+
 dotenv.config();
 
 // Initialize Express app
@@ -211,6 +218,12 @@ app.post("/api/flux", async (req, res) => {
     console.error("❌ Flux error:", err.response?.data || err.message);
     res.status(500).json({ error: "Failed to apply Flux model" });
   }
+});
+
+// 🔥 Serves React
+app.use(express.static(path.join(__dirname, "../dist")));
+app.get("/*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../dist/index.html"));
 });
 
 const PORT = process.env.PORT || 5000;
