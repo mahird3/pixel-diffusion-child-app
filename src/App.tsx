@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Upload, Sparkles, Baby, Heart, Camera, Wand2, Share2, Copy, Facebook, Twitter, MessageCircle, Link } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
+console.log("API_BASE is:", API_BASE);
 
 
 interface GeneratedResult {
