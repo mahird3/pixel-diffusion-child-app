@@ -219,7 +219,7 @@ function App() {
               Future Child Generator
             </h1>
             <p className="text-gray-600 text-lg">
-              Discover what your future child might look like using advanced AI
+              Discover what your future child might look like using advanced AI. Created by Mahir D.
             </p>
           </div>
         </div>
